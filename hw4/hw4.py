@@ -6,6 +6,7 @@ from nltk.corpus import stopwords as sw
 from nltk.stem import WordNetLemmatizer
 import json
 from collections import defaultdict
+import math
 
 docs = []
 for file_name in filter(lambda x: ".html" in x, os.listdir('hw1\\res')):
@@ -51,14 +52,14 @@ for tfk in document_tfs:
     tf = document_tfs[tfk]
     for k in tf:
         termf =tf[k]/len(tf)
-        term_idf =idf[k]/len(texts)
+        term_idf = math.log10(len(texts)/idf[k])
         res.append((k, termf, term_idf, termf*term_idf))
 
 for lemma_tfk in document_lemma_tfs:
     lemma_tf = document_lemma_tfs[lemma_tfk]
     for k in lemma_tf:
         lemma_tf1 = lemma_tf[k]/len(lemma_tf)
-        lemma_idf1 =lemma_idf[k]/len(texts)
+        lemma_idf1 = math.log10(len(texts)/lemma_idf[k])
         lemma_res.append((k, lemma_tf1, lemma_idf1, lemma_tf1*lemma_idf1))
 
 with open("hw4\\res\\tfs.txt", 'w', encoding='utf-8')as file:

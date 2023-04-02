@@ -5,6 +5,7 @@ import nltk
 from nltk.corpus import stopwords as sw
 from nltk.stem import WordNetLemmatizer
 import json
+from collections import defaultdict
 
 nltk.download('stopwords')
 lemmatizer = WordNetLemmatizer()
@@ -28,40 +29,43 @@ def getIndex(path):
         return index
 
 def saveIndex(path, inverted_index):
-    dump = dict(zip(inverted_index.keys(), map(list, inverted_index.values())))
     with open(path, "w") as f:
-        json.dump(dump, f)
+        json.dump(inverted_index, f)
 
 def loadIndex(path):
     with open(path, "r") as f:
         return json.load(f)
 
-def preprocess(text):
+def preprocess(text, need_lemma=True):
     text = text.lower()
     tokens = nltk.word_tokenize(text)
     tokens = [w.lower() for w in tokens if w.isalpha() and w.lower() not in stopwords and len(w) > 2 and not any(char.isdigit() for char in w)]
-    lemmas = [lemmatizer.lemmatize(token) for token in tokens]
-    filtered_lemmas = [lemma for lemma in lemmas if lemma not in stopwords]
-    return filtered_lemmas
+    if (need_lemma):
+        lemmas = [lemmatizer.lemmatize(token) for token in tokens]
+        filtered_lemmas = [lemma for lemma in lemmas if lemma not in stopwords]
+        return filtered_lemmas
+    return tokens
 
-def preprocessSoft(text):
+def preprocessSoft(text, need_lemma=True):
     text = text.lower()
     tokens = nltk.word_tokenize(text)
-    lemmas = [lemmatizer.lemmatize(token) for token in tokens]
-    return lemmas
+    if need_lemma:
+        lemmas = [lemmatizer.lemmatize(token) for token in tokens]
+        return lemmas
+    return tokens
 
 def createIndex(documents):
     index = {}
     for i, doc in enumerate(documents):
-        lemmas = preprocess(doc[1])
-        for lemma in lemmas:
-            if lemma not in index:
-                index[lemma] = set()
-            index[lemma].add(doc[0])
+        words = preprocess(doc[1], False)
+        for word in words:
+            if word not in index:
+                index[word] = defaultdict(int)
+            index[word][doc[0]] += 1
     return index
 
 def search(query, index):
-    query_tokens = preprocessSoft(query)
+    query_tokens = preprocessSoft(query, False)
     print (query_tokens)
     result_docs = set()
     i = 0
@@ -71,17 +75,17 @@ def search(query, index):
         if token == 'or':
             or_token = query_tokens[i+1]
             if or_token in index:
-                or_docs = set(index[or_token])
+                or_docs = set(index[or_token].keys())
                 result_docs |= or_docs
             i+=1
         elif token == 'and':
             and_token = query_tokens[i+1]
             if and_token in index:
-                and_docs = set(index[and_token])
+                and_docs = set(index[and_token].keys())
                 result_docs &= and_docs
             i+=1
         elif token in index:
-            result_docs = set(index[token])
+            result_docs = set(index[token].keys())
         i+=1
     
     return result_docs
