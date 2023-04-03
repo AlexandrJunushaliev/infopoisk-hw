@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Search App</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  </head>
+  <body>
+    <h1>Search App</h1>
+    <div>
+      <label for="query">Query:</label>
+      <input type="text" id="query">
+      <button id="search-btn">Search</button>
+    </div>
+    <div id="results"></div>
+    <script>
+      const searchBtn = document.getElementById('search-btn');
+      const queryInput = document.getElementById('query');
+      const resultsDiv = document.getElementById('results');
+      
+      searchBtn.addEventListener('click', () => {
+        const query = queryInput.value;
+        resultsDiv.innerHTML=''
+        fetch('/?query=' + encodeURIComponent(query), {method:'POST'})
+          .then(response => response.json())
+          .then(data => {
+            if(!data || !data.length){
+              resultsDiv.innerHTML = `NOT FOUND`
+
+              return 
+            }
+
+            const results = data.map((page)=> ({name:page[0],value:page[1]}))
+
+            for (let i = 0; i < results.length; i++) {
+              const result = results[i];
+              const resultDiv = document.createElement('div');
+              const resultResult = document.createElement('span');
+              const resultName = document.createElement('span');
+              resultDiv.style.display = 'flex'
+              resultDiv.style.gap = '10px'
+
+              resultName.textContent =  result.name + ': ';
+              resultResult.textContent = (+result.value).toFixed(6);
+              resultDiv.appendChild(resultName)
+              resultDiv.appendChild(resultResult);
+              resultsDiv.appendChild(resultDiv);
+            }
+          });
+      });
+    </script>
+  </body>
+</html>

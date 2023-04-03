@@ -57,7 +57,7 @@ def preprocessSoft(text, need_lemma=True):
 def createIndex(documents):
     index = {}
     for i, doc in enumerate(documents):
-        words = preprocess(doc[1], False)
+        words = preprocess(doc[1], True)
         for word in words:
             if word not in index:
                 index[word] = defaultdict(int)
@@ -65,21 +65,53 @@ def createIndex(documents):
     return index
 
 def search(query, index):
-    query_tokens = preprocessSoft(query, False)
+    query_tokens = preprocessSoft(query, True)
     print (query_tokens)
     result_docs = set()
     i = 0
     while i < len(query_tokens):
         token = query_tokens[i]
-        
-        if token == 'or':
+        if token == 'not':
+            res = []
+            unwanded_docs = set(index[query_tokens[i+1]].keys())
+            for k in index.keys():
+                res.append(index[k].keys())
+            result_docs = set()
+            for x in res:
+                for j in x:
+                    if j not in unwanded_docs:
+                        result_docs.add(j)
+            i+=1
+        elif token == 'or':
             or_token = query_tokens[i+1]
-            if or_token in index:
+            if or_token == "not":
+                res = []
+                unwanded_docs = set(index[query_tokens[i+2]].keys())
+                for k in index.keys():
+                        res.append(index[k].keys())
+                for x in res:
+                    for j in x:
+                        if j not in unwanded_docs:
+                            result_docs.add(j)
+                i+=1
+            elif or_token in index:
                 or_docs = set(index[or_token].keys())
                 result_docs |= or_docs
             i+=1
         elif token == 'and':
             and_token = query_tokens[i+1]
+            if and_token == "not":
+                res = []
+                unwanded_docs = set(index[query_tokens[i+2]].keys())
+                for k in index.keys():
+                    res.append(index[k].keys())
+                res_set = set()
+                for x in res:
+                    for j in x:
+                        if j not in unwanded_docs:
+                            res_set.add(j)
+                result_docs &= res_set
+                i+=1
             if and_token in index:
                 and_docs = set(index[and_token].keys())
                 result_docs &= and_docs
@@ -91,4 +123,4 @@ def search(query, index):
     return result_docs
 
 index = getIndex("hw3\\res\\index.json")
-print(search("bennet AND concussion", index ))
+print(search("concussions", index ))

@@ -65,10 +65,11 @@ def search(query, index, documents):
             results.append((doc_id, similarity))
     return sorted(results, key=lambda x: x[1], reverse=True)
 
-
+def getSearch(query):
+    return search(query, index, documents)
 documents = set()
 for k in index:
     for doc in index[k].keys():
         documents.add(doc)
-query = "concussions"
-print(search(query, index, documents))
+#query = "concussions"
+#print(search(query, index, documents))
